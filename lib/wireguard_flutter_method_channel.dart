@@ -57,4 +57,21 @@ class WireGuardFlutterMethodChannel extends WireGuardFlutterInterface {
               )
             : VpnStage.disconnected,
       );
+
+  @override
+  Future<Map<String, int>> getStats({required String tunnelName}) async {
+    try {
+      final results = await Future.wait([
+        _methodChannel.invokeMethod<int>('getDownloadData'),
+        _methodChannel.invokeMethod<int>('getUploadData'),
+      ]);
+
+      final int rxBytes = results[0] ?? 0;
+      final int txBytes = results[1] ?? 0;
+
+      return {'rx': rxBytes, 'tx': txBytes};
+    } on PlatformException catch (e) {
+      throw Exception('Failed to get stats: ${e.message}');
+    }
+  }
 }

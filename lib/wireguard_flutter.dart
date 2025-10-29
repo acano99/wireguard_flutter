@@ -59,4 +59,9 @@ class WireGuardFlutter extends WireGuardFlutterInterface {
 
   @override
   Future<VpnStage> stage() => _instance.stage();
+
+  @override
+  Future<Map<String, int>> getStats({required String tunnelName}) {
+    return _instance.getStats(tunnelName: tunnelName);
+  }
 }

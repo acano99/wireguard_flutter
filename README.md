@@ -168,6 +168,25 @@ When `wireguard.initialize` is called, the application will request your user pa
 
 On Linux, you may receive the error `resolvconf: command not found`. This is because wireguard tried to adjust the nameserver. Make sure to install `openresolv` or not provide the "DNS" field.
 
+### Get Stats
+
+To obtain traffic statistics (total bytes transmitted and received) for the active tunnel, use the `getStats` method. This is useful for monitoring data usage.
+
+The method returns a `Future<Map<String, int>>` containing the total received bytes (key: 'rx') and total transmitted bytes (key: 'tx').
+
+```dart
+try {
+  final stats = await wireguard.getStats(tunnelName: 'wg0');
+  final receivedBytes = stats['rx'] ?? 0;
+  final transmittedBytes = stats['tx'] ?? 0;
+  
+  print('Bytes Received: $receivedBytes');
+  print('Bytes Transmitted: $transmittedBytes');
+} catch (e) {
+  print('Error getting stats: $e');
+}
+```
+
 ---
 
 "WireGuard" is a registered trademark of Jason A. Donenfeld.

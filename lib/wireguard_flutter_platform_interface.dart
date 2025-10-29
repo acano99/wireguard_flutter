@@ -15,6 +15,10 @@ abstract class WireGuardFlutterInterface {
   Future<VpnStage> stage();
   Future<bool> isConnected() =>
       stage().then((stage) => stage == VpnStage.connected);
+
+  Future<Map<String, int>> getStats({required String tunnelName}) {
+    throw UnimplementedError('getStats() has not been implemented.');
+  }
 }
 
 enum VpnStage {
