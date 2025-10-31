@@ -11,3 +11,13 @@ class InstalledApp {
   final String packageName;
   final Uint8List icon;
 }
+
+class Stats {
+  const Stats({
+    required this.rx,
+    required this.tx,
+  });
+
+  final int rx;
+  final int tx;
+}

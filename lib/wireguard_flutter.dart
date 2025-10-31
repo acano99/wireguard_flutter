@@ -1,72 +1,102 @@
-import 'dart:io';
+import 'dart:async';
 
-import 'package:flutter/foundation.dart';
-import 'package:wireguard_flutter/linux/wireguard_flutter_linux.dart';
-import 'package:wireguard_flutter/wireguard_flutter_method_channel.dart';
+import 'package:flutter/services.dart';
+import 'package:wireguard_flutter/pigeon.dart' as pigeon;
 
-import 'wireguard_flutter_platform_interface.dart';
-
-export 'wireguard_flutter_platform_interface.dart' show VpnStage;
+import 'models.dart';
 export 'models.dart';
 
-class WireGuardFlutter extends WireGuardFlutterInterface {
-  static WireGuardFlutterInterface? __instance;
-  static WireGuardFlutterInterface get _instance => __instance!;
-  static WireGuardFlutterInterface get instance {
-    registerWith();
-    return _instance;
-  }
+enum VpnStage {
+  connected('connected'),
+  connecting('connecting'),
+  disconnecting('disconnecting'),
+  disconnected('disconnected'),
+  waitingConnection('wait_connection'),
+  authenticating('authenticating'),
+  reconnect('reconnect'),
+  noConnection('no_connection'),
+  preparing('prepare'),
+  denied('denied'),
+  exiting('exiting');
 
-  static void registerWith() {
-    if (__instance == null) {
-      if (kIsWeb) {
-        throw UnsupportedError('The web platform is not supported');
-      } else if (Platform.isLinux) {
-        __instance = WireGuardFlutterLinux();
-      } else {
-        __instance = WireGuardFlutterMethodChannel();
-      }
-    }
-  }
+  final String code;
+  const VpnStage(this.code);
+}
 
+class WireGuardFlutter {
   WireGuardFlutter._();
+  static final WireGuardFlutter instance = WireGuardFlutter._();
 
-  @override
-  Stream<VpnStage> get vpnStageSnapshot => _instance.vpnStageSnapshot;
+  final pigeon.WireGuardHostApi _api = pigeon.WireGuardHostApi();
 
-  @override
-  Future<void> initialize({required String interfaceName}) {
-    return _instance.initialize(interfaceName: interfaceName);
+  static const _eventChannelVpnStage = 'billion.group.wireguard_flutter/wgstage';
+  static const _eventChannel = EventChannel(_eventChannelVpnStage);
+
+  Stream<VpnStage> get vpnStageSnapshot {
+    return _eventChannel.receiveBroadcastStream().map(
+          (event) => VpnStage.values.firstWhere(
+            (stage) => stage.code == event,
+            orElse: () => VpnStage.noConnection,
+          ),
+        );
   }
 
-  @override
+  Future<void> initialize({required String interfaceName}) {
+    return _api.initialize(interfaceName);
+  }
+
   Future<void> startVpn({
     required String serverAddress,
     required String wgQuickConfig,
     required String providerBundleIdentifier,
     List<String>? allowedApplications,
     List<String>? disallowedApplications,
-  }) async {
-    return _instance.startVpn(
-      serverAddress: serverAddress,
-      wgQuickConfig: wgQuickConfig,
-      providerBundleIdentifier: providerBundleIdentifier,
-      allowedApplications: allowedApplications,
-      disallowedApplications: disallowedApplications,
+  }) {
+    if (allowedApplications != null && disallowedApplications != null) {
+      throw ArgumentError(
+        'Cannot provide both allowedApplications and disallowedApplications.',
+      );
+    }
+    String finalWgQuickConfig = wgQuickConfig;
+    if (allowedApplications != null && allowedApplications.isNotEmpty) {
+      finalWgQuickConfig +=
+          '\nIncludedApplications = ${allowedApplications.join(', ')}';
+    } else if (disallowedApplications != null &&
+        disallowedApplications.isNotEmpty) {
+      finalWgQuickConfig +=
+          '\nExcludedApplications = ${disallowedApplications.join(', ')}';
+    }
+
+    return _api.startVpn(serverAddress, finalWgQuickConfig,
+        providerBundleIdentifier, allowedApplications, disallowedApplications);
+  }
+
+  Future<void> stopVpn() => _api.stopVpn();
+
+  Future<void> refreshStage() => _api.refreshStage();
+
+  Future<VpnStage> stage() async {
+    final stageString = await _api.stage();
+    return VpnStage.values.firstWhere(
+      (s) => s.code == stageString,
+      orElse: () => VpnStage.noConnection,
     );
   }
 
-  @override
-  Future<void> stopVpn() => _instance.stopVpn();
+  Future<Stats> getStats({required String tunnelName}) async {
+    final pigeon.Stats stats = await _api.getStats(tunnelName);
+    return Stats(rx: stats.rx?.toInt() ?? 0, tx: stats.tx?.toInt() ?? 0);
+  }
 
-  @override
-  Future<void> refreshStage() => _instance.refreshStage();
-
-  @override
-  Future<VpnStage> stage() => _instance.stage();
-
-  @override
-  Future<Map<String, int>> getStats({required String tunnelName}) {
-    return _instance.getStats(tunnelName: tunnelName);
+  Future<List<InstalledApp>> getInstalledApplications() async {
+    final List<pigeon.InstalledApp?> apps = await _api.getInstalledApplications();
+    return apps
+        .where((app) => app != null)
+        .map((app) => InstalledApp(
+              name: app!.name ?? '',
+              packageName: app.packageName ?? '',
+              icon: app.icon ?? Uint8List(0),
+            ))
+        .toList();
   }
 }
