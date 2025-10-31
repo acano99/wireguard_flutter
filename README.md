@@ -172,6 +172,58 @@ On Linux, you may receive the error `resolvconf: command not found`. This is bec
 
 To obtain traffic statistics (total bytes transmitted and received) for the active tunnel, use the `getStats` method. This is useful for monitoring data usage.
 
+### Firewall and Split-Tunneling (Android Only)
+
+This plugin provides functionality to control which applications use the VPN tunnel on Android. You can operate in two modes: Firewall (allow-list) or Split-Tunneling (deny-list).
+
+#### 1. Get Installed Applications
+
+First, you need to get a list of installed applications on the device. Use the `getInstalledApplications` method:
+
+```dart
+List<InstalledApp> apps = await WireGuardFlutter.instance.getInstalledApplications();
+
+for (final app in apps) {
+  print('App Name: ${app.name}');
+  print('Package Name: ${app.packageName}');
+  // You can use app.icon in an Image.memory widget
+}
+```
+
+#### 2. Start VPN with Application Control
+
+The `startVpn` method has two new optional parameters: `allowedApplications` and `disallowedApplications`.
+
+**Important:** You can only use one of these parameters at a time. Providing both will result in an error.
+
+**Firewall Mode (Allow-list)**
+
+Use `allowedApplications` to specify which apps are the **only ones** allowed to use the network. On Android 10 (API 29) and above, all other apps will be **blocked** from accessing the internet. On older versions, other apps will bypass the VPN and use the normal network.
+
+```dart
+await wireguard.startVpn(
+  // ... other params
+  allowedApplications: ['com.example.work_app', 'com.example.another_app'],
+);
+```
+
+This works by adding the `IncludedApplications` key to the WireGuard configuration.
+
+**Split-Tunneling Mode (Deny-list)**
+
+Use `disallowedApplications` to specify which apps should **bypass** the VPN and use the normal network. All other apps will use the VPN.
+
+```dart
+await wireguard.startVpn(
+  // ... other params
+  disallowedApplications: ['com.example.netflix', 'com.example.bank_app'],
+);
+```
+
+This works by adding the `ExcludedApplications` key to the WireGuard configuration.
+
+If you provide neither parameter, the VPN will work as normal, tunneling traffic for all applications.
+
 The method returns a `Future<Map<String, int>>` containing the total received bytes (key: 'rx') and total transmitted bytes (key: 'tx').
 
 ```dart

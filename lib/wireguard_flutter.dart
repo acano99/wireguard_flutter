@@ -7,6 +7,7 @@ import 'package:wireguard_flutter/wireguard_flutter_method_channel.dart';
 import 'wireguard_flutter_platform_interface.dart';
 
 export 'wireguard_flutter_platform_interface.dart' show VpnStage;
+export 'models.dart';
 
 class WireGuardFlutter extends WireGuardFlutterInterface {
   static WireGuardFlutterInterface? __instance;
@@ -43,11 +44,15 @@ class WireGuardFlutter extends WireGuardFlutterInterface {
     required String serverAddress,
     required String wgQuickConfig,
     required String providerBundleIdentifier,
+    List<String>? allowedApplications,
+    List<String>? disallowedApplications,
   }) async {
     return _instance.startVpn(
       serverAddress: serverAddress,
       wgQuickConfig: wgQuickConfig,
       providerBundleIdentifier: providerBundleIdentifier,
+      allowedApplications: allowedApplications,
+      disallowedApplications: disallowedApplications,
     );
   }
 

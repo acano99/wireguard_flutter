@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:wireguard_flutter/models.dart';
 
 import 'wireguard_flutter_platform_interface.dart';
 
@@ -34,10 +36,28 @@ class WireGuardFlutterMethodChannel extends WireGuardFlutterInterface {
     required String serverAddress,
     required String wgQuickConfig,
     required String providerBundleIdentifier,
+    List<String>? allowedApplications,
+    List<String>? disallowedApplications,
   }) async {
+    if (allowedApplications != null && disallowedApplications != null) {
+      throw ArgumentError(
+        'Cannot provide both allowedApplications and disallowedApplications.',
+      );
+    }
+
+    String finalWgQuickConfig = wgQuickConfig;
+    if (allowedApplications != null && allowedApplications.isNotEmpty) {
+      finalWgQuickConfig +=
+          '\nIncludedApplications = ${allowedApplications.join(', ')}';
+    } else if (disallowedApplications != null &&
+        disallowedApplications.isNotEmpty) {
+      finalWgQuickConfig +=
+          '\nExcludedApplications = ${disallowedApplications.join(', ')}';
+    }
+
     return _methodChannel.invokeMethod("start", {
       "serverAddress": serverAddress,
-      "wgQuickConfig": wgQuickConfig,
+      "wgQuickConfig": finalWgQuickConfig,
       "providerBundleIdentifier": providerBundleIdentifier,
     });
   }
@@ -73,5 +93,24 @@ class WireGuardFlutterMethodChannel extends WireGuardFlutterInterface {
     } on PlatformException catch (e) {
       throw Exception('Failed to get stats: ${e.message}');
     }
+  }
+
+  @override
+  Future<List<InstalledApp>> getInstalledApplications() async {
+    if (!kIsWeb && Platform.isAndroid) {
+      final apps = await _methodChannel.invokeMethod<List<dynamic>>(
+        'getInstalledApplications',
+      );
+      return apps?.map((app) {
+        final map = app as Map<dynamic, dynamic>;
+        return InstalledApp(
+          name: map['name'] as String,
+          packageName: map['packageName'] as String,
+          icon: map['icon'] as Uint8List,
+        );
+      }).toList() ??
+          [];
+    }
+    return [];
   }
 }

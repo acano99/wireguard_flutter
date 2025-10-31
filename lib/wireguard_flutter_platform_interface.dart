@@ -7,6 +7,8 @@ abstract class WireGuardFlutterInterface {
     required String serverAddress,
     required String wgQuickConfig,
     required String providerBundleIdentifier,
+    List<String>? allowedApplications,
+    List<String>? disallowedApplications,
   });
 
   Future<void> stopVpn();
@@ -18,6 +20,12 @@ abstract class WireGuardFlutterInterface {
 
   Future<Map<String, int>> getStats({required String tunnelName}) {
     throw UnimplementedError('getStats() has not been implemented.');
+  }
+
+  Future<List<InstalledApp>> getInstalledApplications() {
+    throw UnimplementedError(
+      'getInstalledApplications() has not been implemented.',
+    );
   }
 }
 

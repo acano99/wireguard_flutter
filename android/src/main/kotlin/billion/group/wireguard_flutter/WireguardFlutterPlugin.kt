@@ -26,6 +26,12 @@ import kotlinx.coroutines.*
 import java.util.*
 
 
+import android.content.pm.ApplicationInfo
+import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.drawable.BitmapDrawable
+import java.io.ByteArrayOutputStream
+
 import kotlinx.coroutines.launch
 import java.io.ByteArrayInputStream
 
@@ -169,7 +175,47 @@ class WireguardFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
             "getUploadData" -> {
                 getUploadData(result)
             }
+            "getInstalledApplications" -> {
+                getInstalledApplications(result)
+            }
             else -> flutterNotImplemented(result)
+        }
+    }
+
+    private fun getInstalledApplications(result: Result) {
+        scope.launch(Dispatchers.IO) {
+            try {
+                val pm = context.packageManager
+                val apps = pm.getInstalledApplications(PackageManager.GET_META_DATA)
+                val appList = ArrayList<Map<String, Any>>()
+
+                for (app in apps) {
+                    // Skip own app
+                    if (app.packageName == context.packageName) {
+                        continue
+                    }
+                    val appInfo = HashMap<String, Any>()
+                    appInfo["name"] = app.loadLabel(pm).toString()
+                    appInfo["packageName"] = app.packageName
+
+                    try {
+                        val icon = app.loadIcon(pm)
+                        if (icon is BitmapDrawable) {
+                            val bitmap = icon.bitmap
+                            val stream = ByteArrayOutputStream()
+                            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+                            appInfo["icon"] = stream.toByteArray()
+                        }
+                    } catch (e: Exception) {
+                        // If icon cannot be loaded, we can either skip or send a placeholder
+                        // For now, we just won't add the icon to the map
+                    }
+                    appList.add(appInfo)
+                }
+                flutterSuccess(result, appList)
+            } catch (e: Exception) {
+                flutterError(result, e.message ?: "Failed to get installed applications")
+            }
         }
     }
 
