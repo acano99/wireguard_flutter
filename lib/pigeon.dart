@@ -132,7 +132,7 @@ class WireGuardHostApi {
     }
   }
 
-  Future<void> startVpn(String serverAddress, String wgQuickConfig, String providerBundleIdentifier, List<String?>? allowedApplications, List<String?>? disallowedApplications) async {
+  Future<void> startVpn(String serverAddress, String wgQuickConfig, String providerBundleIdentifier) async {
     const String __pigeon_channelName = 'dev.flutter.pigeon.wireguard_flutter.WireGuardHostApi.startVpn';
     final BasicMessageChannel<Object?> __pigeon_channel = BasicMessageChannel<Object?>(
       __pigeon_channelName,
@@ -140,7 +140,7 @@ class WireGuardHostApi {
       binaryMessenger: __pigeon_binaryMessenger,
     );
     final List<Object?>? __pigeon_replyList =
-        await __pigeon_channel.send(<Object?>[serverAddress, wgQuickConfig, providerBundleIdentifier, allowedApplications, disallowedApplications]) as List<Object?>?;
+        await __pigeon_channel.send(<Object?>[serverAddress, wgQuickConfig, providerBundleIdentifier]) as List<Object?>?;
     if (__pigeon_replyList == null) {
       throw _createConnectionError(__pigeon_channelName);
     } else if (__pigeon_replyList.length > 1) {

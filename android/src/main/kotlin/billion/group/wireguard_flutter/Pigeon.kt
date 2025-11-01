@@ -125,7 +125,7 @@ private object WireGuardHostApiCodec : StandardMessageCodec() {
 /** Generated interface from Pigeon that represents a handler of messages from Flutter. */
 interface WireGuardHostApi {
   fun initialize(interfaceName: String, callback: (Result<Unit>) -> Unit)
-  fun startVpn(serverAddress: String, wgQuickConfig: String, providerBundleIdentifier: String, allowedApplications: List<String>?, disallowedApplications: List<String>?, callback: (Result<Unit>) -> Unit)
+  fun startVpn(serverAddress: String, wgQuickConfig: String, providerBundleIdentifier: String, callback: (Result<Unit>) -> Unit)
   fun stopVpn(callback: (Result<Unit>) -> Unit)
   fun stage(callback: (Result<String>) -> Unit)
   fun refreshStage(callback: (Result<Unit>) -> Unit)
@@ -167,9 +167,7 @@ interface WireGuardHostApi {
             val serverAddressArg = args[0] as String
             val wgQuickConfigArg = args[1] as String
             val providerBundleIdentifierArg = args[2] as String
-            val allowedApplicationsArg = args[3] as List<String>?
-            val disallowedApplicationsArg = args[4] as List<String>?
-            api.startVpn(serverAddressArg, wgQuickConfigArg, providerBundleIdentifierArg, allowedApplicationsArg, disallowedApplicationsArg) { result: Result<Unit> ->
+            api.startVpn(serverAddressArg, wgQuickConfigArg, providerBundleIdentifierArg) { result: Result<Unit> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(wrapError(error))

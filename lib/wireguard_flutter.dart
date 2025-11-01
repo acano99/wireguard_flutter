@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:wireguard_flutter/pigeon.dart' as pigeon;
 
+import 'config_builder.dart';
 import 'models.dart';
+export 'config_builder.dart';
 export 'models.dart';
 
 enum VpnStage {
@@ -47,28 +49,15 @@ class WireGuardFlutter {
 
   Future<void> startVpn({
     required String serverAddress,
-    required String wgQuickConfig,
+    required WgConfig config,
     required String providerBundleIdentifier,
-    List<String>? allowedApplications,
-    List<String>? disallowedApplications,
   }) {
-    if (allowedApplications != null && disallowedApplications != null) {
-      throw ArgumentError(
-        'Cannot provide both allowedApplications and disallowedApplications.',
-      );
-    }
-    String finalWgQuickConfig = wgQuickConfig;
-    if (allowedApplications != null && allowedApplications.isNotEmpty) {
-      finalWgQuickConfig +=
-          '\nIncludedApplications = ${allowedApplications.join(', ')}';
-    } else if (disallowedApplications != null &&
-        disallowedApplications.isNotEmpty) {
-      finalWgQuickConfig +=
-          '\nExcludedApplications = ${disallowedApplications.join(', ')}';
-    }
-
-    return _api.startVpn(serverAddress, finalWgQuickConfig,
-        providerBundleIdentifier, allowedApplications, disallowedApplications);
+    final finalWgQuickConfig = config.toWgQuickString();
+    return _api.startVpn(
+      serverAddress,
+      finalWgQuickConfig,
+      providerBundleIdentifier,
+    );
   }
 
   Future<void> stopVpn() => _api.stopVpn();

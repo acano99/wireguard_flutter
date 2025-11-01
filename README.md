@@ -63,43 +63,41 @@ for (final app in apps) {
 
 ### 4. Iniciar la Conexión
 
-El método `startVpn` permite tres modos de funcionamiento.
-
-#### a) Conexión Normal (Todo el tráfico por la VPN)
-
-No pases ninguna lista de aplicaciones. Todo el tráfico del dispositivo pasará por el túnel.
+Construye la configuración de la VPN usando el `WgConfigBuilder` y pásala al método `startVpn`.
 
 ```dart
+// 1. Crea y configura el builder
+final configBuilder = WgConfigBuilder()
+    .setInterface(
+      privateKey: 'YOUR_PRIVATE_KEY',
+      addresses: ['10.0.0.2/32'],
+      dnsServers: ['1.1.1.1'],
+    )
+    .addPeer(
+      publicKey: 'PEER_PUBLIC_KEY',
+      endpoint: 'demo.wireguard.com:51820',
+      allowedIps: ['0.0.0.0/0'],
+    );
+
+// 2. (Opcional) Añade reglas de firewall
+// configBuilder.setAllowedApplications(['com.android.chrome']);
+
+// 3. Inicia la VPN
 await wireguard.startVpn(
   serverAddress: 'demo.wireguard.com:51820',
-  wgQuickConfig: '''[Interface]
-PrivateKey = ...
-Address = ...
-''',
   providerBundleIdentifier: 'com.tu.paquete',
+  config: configBuilder.build(), // Construye el objeto de configuración
 );
 ```
 
-#### b) Modo Firewall (Solo apps permitidas)
-
-Pasa una lista de paquetes de aplicaciones al parámetro `allowedApplications`. Solo estas apps tendrán acceso a la red. El resto serán bloqueadas (en Android 10+).
+El `WgConfigBuilder` te permite configurar el firewall (lista blanca) o el split-tunneling (lista negra) de la siguiente manera:
 
 ```dart
-await wireguard.startVpn(
-  // ... otros parámetros
-  allowedApplications: ['com.android.chrome', 'com.slack'],
-);
-```
+// Modo Firewall (solo estas apps tienen red)
+configBuilder.setAllowedApplications(['com.slack', 'com.google.android.gm']);
 
-#### c) Modo Split-Tunnel (Apps excluidas)
-
-Pasa una lista de paquetes de aplicaciones al parámetro `disallowedApplications`. Todas las apps usarán la VPN, excepto las de la lista, que usarán la red normal.
-
-```dart
-await wireguard.startVpn(
-  // ... otros parámetros
-  disallowedApplications: ['com.netflix.mediaclient'],
-);
+// Modo Split-Tunnel (estas apps no usan la VPN)
+configBuilder.setDisallowedApplications(['com.netflix.mediaclient']);
 ```
 
 ### 5. Escuchar Cambios de Estado

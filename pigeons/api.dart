@@ -32,8 +32,6 @@ abstract class WireGuardHostApi {
     String serverAddress,
     String wgQuickConfig,
     String providerBundleIdentifier,
-    List<String>? allowedApplications,
-    List<String>? disallowedApplications,
   );
 
   @async

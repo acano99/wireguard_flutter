@@ -119,7 +119,7 @@ class WireguardFlutterPlugin : FlutterPlugin, ActivityAware, PluginRegistry.Acti
         callback(Result.success(Unit))
     }
 
-    override fun startVpn(serverAddress: String, wgQuickConfig: String, providerBundleIdentifier: String, allowedApplications: List<String>?, disallowedApplications: List<String>?, callback: (Result<Unit>) -> Unit) {
+    override fun startVpn(serverAddress: String, wgQuickConfig: String, providerBundleIdentifier: String, callback: (Result<Unit>) -> Unit) {
         scope.launch(Dispatchers.IO) {
             try {
                 if (!havePermission) {
