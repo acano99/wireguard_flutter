@@ -131,26 +131,26 @@ class WireguardFlutterPlugin : FlutterPlugin, ActivityAware, PluginRegistry.Acti
                 val configBuilder = com.wireguard.config.Config.Builder()
                 val interfaceBuilder = com.wireguard.config.Interface.Builder()
 
-                interfaceConfig.privateKey?.let { interfaceBuilder.setPrivateKey(it) }
+                interfaceConfig.privateKey?.let { interfaceBuilder.privateKey = it }
                 interfaceConfig.addresses?.let { interfaceBuilder.parseAddresses(it.filterNotNull().joinToString(", ")) }
                 interfaceConfig.dnsServers?.let { interfaceBuilder.parseDnsServers(it.filterNotNull().joinToString(", ")) }
 
                 interfaceConfig.allowedApplications?.let { apps ->
-                    interfaceBuilder.addIncludedApplications(apps.filterNotNull())
+                    interfaceBuilder.includedApplications.addAll(apps.filterNotNull())
                 }
                 interfaceConfig.disallowedApplications?.let { apps ->
-                    interfaceBuilder.addExcludedApplications(apps.filterNotNull())
+                    interfaceBuilder.excludedApplications.addAll(apps.filterNotNull())
                 }
 
                 configBuilder.setInterface(interfaceBuilder.build())
 
                 peers.filterNotNull().forEach { peer ->
                     val peerBuilder = com.wireguard.config.Peer.Builder()
-                    peer.publicKey?.let { peerBuilder.setPublicKey(it) }
-                    peer.presharedKey?.let { peerBuilder.setPresharedKey(it) }
+                    peer.publicKey?.let { peerBuilder.publicKey = it }
+                    peer.presharedKey?.let { peerBuilder.presharedKey = it }
                     peer.endpoint?.let { peerBuilder.parseEndpoint(it) }
                     peer.allowedIps?.let { peerBuilder.parseAllowedIPs(it.filterNotNull().joinToString(", ")) }
-                    peer.persistentKeepalive?.let { peerBuilder.setPersistentKeepalive(it.toString()) }
+                    peer.persistentKeepalive?.let { peerBuilder.persistentKeepalive = it.toString() }
                     configBuilder.addPeer(peerBuilder.build())
                 }
 
