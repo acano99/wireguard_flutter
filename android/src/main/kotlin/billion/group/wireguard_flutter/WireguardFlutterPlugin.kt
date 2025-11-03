@@ -128,33 +128,35 @@ class WireguardFlutterPlugin : FlutterPlugin, ActivityAware, PluginRegistry.Acti
                 }
                 updateStage("prepare")
 
-                val configBuilder = com.wireguard.config.Config.Builder()
+                // 1. Build the Interface object
                 val interfaceBuilder = com.wireguard.config.Interface.Builder()
-
-                interfaceConfig.privateKey?.let { interfaceBuilder.privateKey = it }
+                interfaceConfig.privateKey?.let { interfaceBuilder.setPrivateKey(it) }
                 interfaceConfig.addresses?.let { interfaceBuilder.parseAddresses(it.filterNotNull().joinToString(", ")) }
                 interfaceConfig.dnsServers?.let { interfaceBuilder.parseDnsServers(it.filterNotNull().joinToString(", ")) }
-
                 interfaceConfig.allowedApplications?.let { apps ->
-                    interfaceBuilder.includedApplications.addAll(apps.filterNotNull())
+                    apps.filterNotNull().forEach { app -> interfaceBuilder.addIncludedApplication(app) }
                 }
                 interfaceConfig.disallowedApplications?.let { apps ->
-                    interfaceBuilder.excludedApplications.addAll(apps.filterNotNull())
+                    apps.filterNotNull().forEach { app -> interfaceBuilder.addExcludedApplication(app) }
                 }
+                val nativeInterface = interfaceBuilder.build()
 
-                configBuilder.setInterface(interfaceBuilder.build())
-
-                peers.filterNotNull().forEach { peer ->
+                // 2. Build the List of Peer objects
+                val nativePeers = peers.filterNotNull().map { peer ->
                     val peerBuilder = com.wireguard.config.Peer.Builder()
-                    peer.publicKey?.let { peerBuilder.publicKey = it }
-                    peer.presharedKey?.let { peerBuilder.presharedKey = it }
+                    peer.publicKey?.let { peerBuilder.setPublicKey(it) }
+                    peer.presharedKey?.let { peerBuilder.setPresharedKey(it) }
                     peer.endpoint?.let { peerBuilder.parseEndpoint(it) }
                     peer.allowedIps?.let { peerBuilder.parseAllowedIPs(it.filterNotNull().joinToString(", ")) }
-                    peer.persistentKeepalive?.let { peerBuilder.persistentKeepalive = it.toString() }
-                    configBuilder.addPeer(peerBuilder.build())
+                    peer.persistentKeepalive?.let { peerBuilder.setPersistentKeepalive(it.toString()) }
+                    peerBuilder.build()
                 }
 
-                val finalConfig = configBuilder.build()
+                // 3. Build the final Config object
+                val finalConfig = com.wireguard.config.Config.Builder()
+                    .setInterface(nativeInterface)
+                    .addPeers(nativePeers)
+                    .build()
 
                 updateStage("connecting")
                 futureBackend.await().setState(
