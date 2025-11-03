@@ -82,11 +82,14 @@ final configBuilder = WgConfigBuilder()
 // 2. (Opcional) Añade reglas de firewall
 // configBuilder.setAllowedApplications(['com.android.chrome']);
 
-// 3. Inicia la VPN
+// 3. Construye el objeto de configuración final, pasando el ID de tu app
+final config = configBuilder.build(providerBundleIdentifier: 'com.tu.paquete');
+
+// 4. Inicia la VPN
 await wireguard.startVpn(
   serverAddress: 'demo.wireguard.com:51820',
   providerBundleIdentifier: 'com.tu.paquete',
-  config: configBuilder.build(), // Construye el objeto de configuración
+  config: config, 
 );
 ```
 

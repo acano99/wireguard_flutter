@@ -52,10 +52,29 @@ class WireGuardFlutter {
     required WgConfig config,
     required String providerBundleIdentifier,
   }) {
-    final finalWgQuickConfig = config.toWgQuickString();
+    final interfaceConfig = pigeon.WgInterfaceConfig(
+      privateKey: config.interface.privateKey,
+      addresses: config.interface.addresses,
+      dnsServers: config.interface.dnsServers,
+      allowedApplications: config.interface.allowedApplications,
+      disallowedApplications: config.interface.disallowedApplications,
+    );
+
+    final peers = config.peers.map((peer) {
+      return pigeon.WgPeerConfig(
+        publicKey: peer.publicKey,
+        presharedKey: peer.presharedKey,
+        endpoint: peer.endpoint,
+        allowedIps: peer.allowedIps,
+        persistentKeepalive: peer.persistentKeepalive,
+      );
+    }).toList();
+
     return _api.startVpn(
+      config.interface.privateKey, // A name for the interface
       serverAddress,
-      finalWgQuickConfig,
+      interfaceConfig,
+      peers,
       providerBundleIdentifier,
     );
   }

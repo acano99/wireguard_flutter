@@ -119,7 +119,7 @@ class WireguardFlutterPlugin : FlutterPlugin, ActivityAware, PluginRegistry.Acti
         callback(Result.success(Unit))
     }
 
-    override fun startVpn(serverAddress: String, wgQuickConfig: String, providerBundleIdentifier: String, callback: (Result<Unit>) -> Unit) {
+    override fun startVpn(interfaceName: String, serverAddress: String, interfaceConfig: WgInterfaceConfig, peers: List<WgPeerConfig?>, providerBundleIdentifier: String, callback: (Result<Unit>) -> Unit) {
         scope.launch(Dispatchers.IO) {
             try {
                 if (!havePermission) {
@@ -127,10 +127,35 @@ class WireguardFlutterPlugin : FlutterPlugin, ActivityAware, PluginRegistry.Acti
                     throw Exception("VPN permission not granted")
                 }
                 updateStage("prepare")
-                val inputStream = ByteArrayInputStream(wgQuickConfig.toByteArray())
-                config = com.wireguard.config.Config.parse(inputStream)
-                updateStage("connecting")
 
+                val configBuilder = com.wireguard.config.Config.Builder()
+                val interfaceBuilder = com.wireguard.config.Interface.Builder()
+                interfaceBuilder.parseAddresses(interfaceConfig.addresses?.filterNotNull()?.joinToString(", "))
+                interfaceBuilder.parseDnsServers(interfaceConfig.dnsServers?.filterNotNull()?.joinToString(", "))
+                interfaceBuilder.setPrivateKey(interfaceConfig.privateKey)
+
+                interfaceConfig.allowedApplications?.let { apps ->
+                    interfaceBuilder.addIncludedApplications(apps.filterNotNull())
+                }
+                interfaceConfig.disallowedApplications?.let { apps ->
+                    interfaceBuilder.addExcludedApplications(apps.filterNotNull())
+                }
+
+                configBuilder.setInterface(interfaceBuilder.build())
+
+                peers.filterNotNull().forEach { peer ->
+                    val peerBuilder = com.wireguard.config.Peer.Builder()
+                    peerBuilder.parseAllowedIPs(peer.allowedIps?.filterNotNull()?.joinToString(", "))
+                    peerBuilder.parseEndpoint(peer.endpoint)
+                    peerBuilder.setPublicKey(peer.publicKey)
+                    peer.presharedKey?.let { psKey -> peerBuilder.setPresharedKey(psKey) }
+                    peer.persistentKeepalive?.let { pk -> peerBuilder.setPersistentKeepalive(pk.toString()) }
+                    configBuilder.addPeer(peerBuilder.build())
+                }
+
+                val finalConfig = configBuilder.build()
+
+                updateStage("connecting")
                 futureBackend.await().setState(
                     tunnel(tunnelName) { state ->
                         val stage = when (state) {
@@ -139,7 +164,7 @@ class WireguardFlutterPlugin : FlutterPlugin, ActivityAware, PluginRegistry.Acti
                             else -> "wait_connection"
                         }
                         updateStage(stage)
-                    }, Tunnel.State.UP, config
+                    }, Tunnel.State.UP, finalConfig
                 )
                 callback(Result.success(Unit))
             } catch (e: Exception) {
