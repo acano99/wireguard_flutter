@@ -7,6 +7,7 @@ import 'dart:typed_data' show Float64List, Int32List, Int64List, Uint8List;
 
 import 'package:flutter/foundation.dart' show ReadBuffer, WriteBuffer;
 import 'package:flutter/services.dart';
+import 'package:pigeon/pigeon.dart';
 
 PlatformException _createConnectionError(String channelName) {
   return PlatformException(
@@ -90,9 +91,9 @@ class _WireGuardHostApiCodec extends StandardMessageCodec {
   @override
   Object? readValueOfType(int type, ReadBuffer buffer) {
     switch (type) {
-      case 128: 
+      case 128:
         return InstalledApp.decode(readValue(buffer)!);
-      case 129: 
+      case 129:
         return Stats.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
@@ -100,6 +101,7 @@ class _WireGuardHostApiCodec extends StandardMessageCodec {
   }
 }
 
+@HostApi()
 class WireGuardHostApi {
   /// Constructor for [WireGuardHostApi].  The [binaryMessenger] named argument is
   /// available for dependency injection.  If it is left null, the default
@@ -108,11 +110,14 @@ class WireGuardHostApi {
       : __pigeon_binaryMessenger = binaryMessenger;
   final BinaryMessenger? __pigeon_binaryMessenger;
 
-  static const MessageCodec<Object?> pigeonChannelCodec = _WireGuardHostApiCodec();
+  static const MessageCodec<Object?> pigeonChannelCodec =
+      _WireGuardHostApiCodec();
 
   Future<void> initialize(String interfaceName) async {
-    const String __pigeon_channelName = 'dev.flutter.pigeon.wireguard_flutter.WireGuardHostApi.initialize';
-    final BasicMessageChannel<Object?> __pigeon_channel = BasicMessageChannel<Object?>(
+    const String __pigeon_channelName =
+        'dev.flutter.pigeon.wireguard_flutter.WireGuardHostApi.initialize';
+    final BasicMessageChannel<Object?> __pigeon_channel =
+        BasicMessageChannel<Object?>(
       __pigeon_channelName,
       pigeonChannelCodec,
       binaryMessenger: __pigeon_binaryMessenger,
@@ -132,15 +137,19 @@ class WireGuardHostApi {
     }
   }
 
-  Future<void> startVpn(String serverAddress, String wgQuickConfig, String providerBundleIdentifier) async {
-    const String __pigeon_channelName = 'dev.flutter.pigeon.wireguard_flutter.WireGuardHostApi.startVpn';
-    final BasicMessageChannel<Object?> __pigeon_channel = BasicMessageChannel<Object?>(
+  Future<void> startVpn(String serverAddress, String wgQuickConfig,
+      String providerBundleIdentifier) async {
+    const String __pigeon_channelName =
+        'dev.flutter.pigeon.wireguard_flutter.WireGuardHostApi.startVpn';
+    final BasicMessageChannel<Object?> __pigeon_channel =
+        BasicMessageChannel<Object?>(
       __pigeon_channelName,
       pigeonChannelCodec,
       binaryMessenger: __pigeon_binaryMessenger,
     );
-    final List<Object?>? __pigeon_replyList =
-        await __pigeon_channel.send(<Object?>[serverAddress, wgQuickConfig, providerBundleIdentifier]) as List<Object?>?;
+    final List<Object?>? __pigeon_replyList = await __pigeon_channel.send(
+            <Object?>[serverAddress, wgQuickConfig, providerBundleIdentifier])
+        as List<Object?>?;
     if (__pigeon_replyList == null) {
       throw _createConnectionError(__pigeon_channelName);
     } else if (__pigeon_replyList.length > 1) {
@@ -155,8 +164,10 @@ class WireGuardHostApi {
   }
 
   Future<void> stopVpn() async {
-    const String __pigeon_channelName = 'dev.flutter.pigeon.wireguard_flutter.WireGuardHostApi.stopVpn';
-    final BasicMessageChannel<Object?> __pigeon_channel = BasicMessageChannel<Object?>(
+    const String __pigeon_channelName =
+        'dev.flutter.pigeon.wireguard_flutter.WireGuardHostApi.stopVpn';
+    final BasicMessageChannel<Object?> __pigeon_channel =
+        BasicMessageChannel<Object?>(
       __pigeon_channelName,
       pigeonChannelCodec,
       binaryMessenger: __pigeon_binaryMessenger,
@@ -177,8 +188,10 @@ class WireGuardHostApi {
   }
 
   Future<String> stage() async {
-    const String __pigeon_channelName = 'dev.flutter.pigeon.wireguard_flutter.WireGuardHostApi.stage';
-    final BasicMessageChannel<Object?> __pigeon_channel = BasicMessageChannel<Object?>(
+    const String __pigeon_channelName =
+        'dev.flutter.pigeon.wireguard_flutter.WireGuardHostApi.stage';
+    final BasicMessageChannel<Object?> __pigeon_channel =
+        BasicMessageChannel<Object?>(
       __pigeon_channelName,
       pigeonChannelCodec,
       binaryMessenger: __pigeon_binaryMessenger,
@@ -204,8 +217,10 @@ class WireGuardHostApi {
   }
 
   Future<void> refreshStage() async {
-    const String __pigeon_channelName = 'dev.flutter.pigeon.wireguard_flutter.WireGuardHostApi.refreshStage';
-    final BasicMessageChannel<Object?> __pigeon_channel = BasicMessageChannel<Object?>(
+    const String __pigeon_channelName =
+        'dev.flutter.pigeon.wireguard_flutter.WireGuardHostApi.refreshStage';
+    final BasicMessageChannel<Object?> __pigeon_channel =
+        BasicMessageChannel<Object?>(
       __pigeon_channelName,
       pigeonChannelCodec,
       binaryMessenger: __pigeon_binaryMessenger,
@@ -226,8 +241,10 @@ class WireGuardHostApi {
   }
 
   Future<Stats> getStats(String tunnelName) async {
-    const String __pigeon_channelName = 'dev.flutter.pigeon.wireguard_flutter.WireGuardHostApi.getStats';
-    final BasicMessageChannel<Object?> __pigeon_channel = BasicMessageChannel<Object?>(
+    const String __pigeon_channelName =
+        'dev.flutter.pigeon.wireguard_flutter.WireGuardHostApi.getStats';
+    final BasicMessageChannel<Object?> __pigeon_channel =
+        BasicMessageChannel<Object?>(
       __pigeon_channelName,
       pigeonChannelCodec,
       binaryMessenger: __pigeon_binaryMessenger,
@@ -253,8 +270,10 @@ class WireGuardHostApi {
   }
 
   Future<List<InstalledApp?>> getInstalledApplications() async {
-    const String __pigeon_channelName = 'dev.flutter.pigeon.wireguard_flutter.WireGuardHostApi.getInstalledApplications';
-    final BasicMessageChannel<Object?> __pigeon_channel = BasicMessageChannel<Object?>(
+    const String __pigeon_channelName =
+        'dev.flutter.pigeon.wireguard_flutter.WireGuardHostApi.getInstalledApplications';
+    final BasicMessageChannel<Object?> __pigeon_channel =
+        BasicMessageChannel<Object?>(
       __pigeon_channelName,
       pigeonChannelCodec,
       binaryMessenger: __pigeon_binaryMessenger,
