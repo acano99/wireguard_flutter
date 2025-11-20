@@ -29,7 +29,8 @@ class WireGuardFlutter {
 
   final pigeon.WireGuardHostApi _api = pigeon.WireGuardHostApi();
 
-  static const _eventChannelVpnStage = 'billion.group.wireguard_flutter/wgstage';
+  static const _eventChannelVpnStage =
+      'billion.group.wireguard_flutter/wgstage';
   static const _eventChannel = EventChannel(_eventChannelVpnStage);
 
   Stream<VpnStage> get vpnStageSnapshot {
@@ -75,7 +76,8 @@ class WireGuardFlutter {
   }
 
   Future<List<InstalledApp>> getInstalledApplications() async {
-    final List<pigeon.InstalledApp?> apps = await _api.getInstalledApplications();
+    final List<pigeon.InstalledApp?> apps =
+        await _api.getInstalledApplications();
     return apps
         .where((app) => app != null)
         .map((app) => InstalledApp(
